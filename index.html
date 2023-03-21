@@ -1,12 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html><head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+* {
+  box-sizing: border-box;
+}
 
-<head>
+body {
+  content: rgba(0, 0, 255, 0);
+  margin: 0;
+  font-family: Bahnschrift;
+  font-size: 20px;
+}
 
+#myVideo {
+  position: fixed;
+  right: 40;
+  bottom: 0;
+  min-width: 100000%; 
+  min-height: 10000%;
+}
+
+.content {
+  position: fixed;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  color: #f1f1f1;
+  width: 100%;
+  padding: 20px;
+}
+
+#myBtn {
+  width: 200px;
+  font-size: 18px;
+  padding: 10px;
+  border: none;
+  background: #000;
+  color: #fff;
+  cursor: pointer;
+}
+
+#myBtn:hover {
+  background: #ddd;
+  color: black;
+}
+</style>
 </head>
-
 <body>
-Hello! This is my website
-</body>
 
-</html>
+<video autoplay="" loop="" muted="">
+		<source src="http://hl2mp.ru/motd/new/hl2dm.mp4" type="video/mp4">
+	</video>
+
+<div class="content">
+  <h1>Bandit's Website</h1>
+  <p>this is mah website. I love mah website.</p>
+</div>
+
+
+
+
+
+</body></html>
