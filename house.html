@@ -1,0 +1,1292 @@
+
+<!-- chungus -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=windows-1252"><title>3D</title>
+</head><body><canvas id="game" width="1920" height="931"></canvas>
+
+<style>
+
+body
+{
+  margin: 0;
+}
+
+</style>
+
+<script>
+
+var x = 500;
+var y = 0;
+var z = 671;
+
+var fov = 120;
+
+var left = false;
+var right = false;
+var up = false;
+var down = false;
+var space = false;
+var shift = false;
+var canvas = document.getElementById("game");
+var ctx = canvas.getContext("2d");
+
+var xTurn = 0;
+var yTurn = 0;
+
+var fpang = 180;
+var fpYang = 0;
+var quadsToDraw = [];
+
+var triedSwapping = new Map();
+
+function polygon(pid, dispVertices, vertices, fillStyle)
+{
+	this.getEquation = function()
+	{
+		return this.a + "x + " + this.b + "y + " + this.c + "z = " + this.d;
+	}
+	
+	this.getXYZ = function()
+	{
+		var str = "";
+		var comma = "";
+		for(var i=0; i<this.x.length; i++)
+		{
+			str += (comma + "(" + this.x[i] + ", " + this.y[i] + ", " + this.z[i] + ")");
+			comma = ", ";
+		}
+		
+		return str;
+	}
+
+	this.triangleCheck = function()
+	{
+		for(var i=0; i<this.x.length; i++)
+		{
+			this.effX.push(this.x[i]);
+			this.effY.push(this.y[i]);
+			this.effZ.push(this.z[i]);
+		
+			var i1 = (i + 1) % this.x.length;
+			var ptsSame = (this.x[i] == this.x[i1] && this.y[i] == this.y[i1] && this.z[i] == this.z[i1]);
+			if(ptsSame)
+			{
+				i++;
+			}
+		}
+	}
+	
+	this.computePlaneCoef = function()
+	{	
+		var v1 = [this.effX[1] - this.effX[0], this.effY[1] - this.effY[0], this.effZ[1] - this.effZ[0]];
+		var v2 = [this.effX[2] - this.effX[0], this.effY[2] - this.effY[0], this.effZ[2] - this.effZ[0]];
+		var pt = [this.effX[0], this.effY[0], this.effZ[0]];
+		
+		[this.a,this.b,this.c,this.d] = crossWithPoint(v1, v2, pt);
+	}
+
+	this.calcMinDist = function()
+	{
+		var planeCoefs = [this.a, this.b, this.c, this.d];
+		var isInsideEdge = [];
+		var checkType = 0;
+		var edgeWalls = [];
+		
+		for(var i=0; i<this.effX.length; i++)
+		{
+			var i1 = (i+1) % this.effX.length;
+			var polyEdgeVec = [ this.effX[i1] - this.effX[i], this.effY[i1] - this.effY[i], this.effZ[i1] - this.effZ[i] ];
+			edgeWalls[i] = crossWithPoint(polyEdgeVec, planeCoefs, [this.effX[i], this.effY[i], this.effZ[i]]);
+			var abc = edgeWalls[i][0] * x + edgeWalls[i][1] * y + edgeWalls[i][2] * z;
+			isInsideEdge[i] = abc < edgeWalls[i][3];
+			checkType += abc >= edgeWalls[i][3];
+		}
+		
+		if(checkType == 0) //is inside poly, so do point-plane
+		{
+			var intersectP = getIntersectionPoint(planeCoefs, [x, y, z], [x+this.a, y+this.b, z+this.c] );
+			this.minDist = distBtwnPts([x,y,z], intersectP);
+		}
+		else //is outside poly, further checks needed
+		{
+			onSide = false;
+			for(var i=0;i<isInsideEdge.length;i++) 
+			{ //get which line is closest to player's point
+				if(!isInsideEdge[i])
+				{
+					var closestLine = [];
+					var i1 = (i+1) % this.effX.length;
+					closestLine[0] = [this.effX[i1], this.effY[i1], this.effZ[i1]];
+					closestLine[1] = [this.effX[i], this.effY[i], this.effZ[i]];
+					
+					var pVec = [edgeWalls[i][0], edgeWalls[i][1], edgeWalls[i][2]]; //line perpendicular to closestLine inplane
+					
+					var bounded = true;
+					var crop = crossProduct([this.a, this.b, this.c], pVec);
+					for(var j=0; j<2; j++)
+					{   
+						var [ba, bb, bc, bd] = findD(crop, closestLine[j]);
+						var abc = ba * x + bb * y + bc * z;
+						bounded = bounded && (abc < bd == (j == 0)); //comparing to j==0 is to switch direction to check
+					}
+					if(bounded)
+					{   // closest to line
+						this.minDist = distBtwnPtAndLine([x,y,z], closestLine[0], closestLine[1]);
+						onSide = true;
+						break;
+					}
+				}
+			}
+			if(!onSide)
+			{   //closest to vertex
+				this.minDist = this.minVertexDist;
+			}
+		}		
+	}
+
+	this.pid = pid;
+	this.mustBeBefore = [];
+	this.mustBeAfter = [];
+	
+	this.x = [];
+	this.y = [];
+	this.z = [];
+	this.effX = [];
+	this.effY = [];
+	this.effZ = [];
+	
+	this.distTo = [];
+	this.minDist = Infinity;
+	this.minVertexDist = Infinity;
+	this.maxDist = 0;
+	
+	this.minDx = Infinity;
+	this.maxDx = 0;
+	this.minDy = Infinity;
+	this.maxDy = 0;
+	
+	this.dx = [];
+	this.dy = [];
+	this.fillStyle = fillStyle;
+	this.swapMap = new Map();
+	
+	for(var i=0; i<dispVertices.length; i++)
+	{
+		this.dx.push(dispVertices[i][0]);
+		this.dy.push(dispVertices[i][1]);
+	}
+	
+	for(var i=0; i<vertices.length; i++)
+	{
+		this.x.push(vertices[i][0]);
+		this.y.push(vertices[i][1]);
+		this.z.push(vertices[i][2]);
+		
+		var distToPt = distBtwnPts([x, y, z], [this.x[i], this.y[i], this.z[i]]);
+		distToPt = precisionRound(distToPt, 10000);
+		
+		this.minVertexDist = Math.min(this.minVertexDist, distToPt);
+		this.maxDist = Math.max(this.maxDist, distToPt);
+		
+		this.distTo.push(distToPt);
+	}
+	
+	for(var i=0; i<this.dx.length; i++)
+	{
+		this.minDx = Math.min(this.minDx, this.dx[i]);
+		this.maxDx = Math.max(this.maxDx, this.dx[i]);
+	}
+	for(var i=0; i<this.dy.length; i++)
+	{
+		this.minDy = Math.min(this.minDy, this.dy[i]);
+		this.maxDy = Math.max(this.maxDy, this.dy[i]);
+	}
+	
+	this.triangleCheck();
+	this.computePlaneCoef();
+	this.calcMinDist();
+	
+	this.swapAdd = function(polySwap)
+	{
+		this.swapMap.set(polySwap.pid, true);
+	}
+	
+	this.swapAddBefore = function(polySwap)
+	{
+		this.mustBeBefore.push(polySwap);
+	}
+	
+	this.swapAddAfter = function(polySwap)
+	{
+		this.mustBeAfter.push(polySwap);
+	}
+	
+	this.unsetMustBe = function(polySwap)
+	{
+		for(var i = 0; i < this.mustBeBefore.length; i++)
+		{
+			if(this.mustBeBefore[i] == polySwap)
+			{
+				this.mustBeBefore.splice(i, 1);
+			}
+		}
+		
+		for(var i = 0; i < this.mustBeAfter.length; i++)
+		{
+			if(this.mustBeAfter[i] == polySwap)
+			{
+				this.mustBeAfter.splice(i, 1);
+			}
+		}
+	}
+	
+	this.swapHas = function(polySwap)
+	{
+		return this.swapMap.has(polySwap.pid);
+	}
+	
+	this.abovePlane = function(vIdx, polyPlane)
+	{
+		return ( polyPlane.a * this.x[vIdx] + polyPlane.b * this.y[vIdx] + polyPlane.c * this.z[vIdx] ) > polyPlane.d;
+	}
+	
+	this.planeTest = function(polyi)
+	{
+		var a = polyi.a;
+		var b = polyi.b;
+		var c = polyi.c;
+		var d = polyi.d;
+		
+		var allSame = true;
+		var allDiff = true;
+		
+		var playerTest = ( a * x + b * y +  c * z ) >= d; //side of plane player is on
+		
+		for(var i=0; i<this.x.length; i++)
+		{
+			var abc = ( a * this.x[i] + b * this.y[i] +  c * this.z[i] );
+			if(abc == d)
+			{
+				continue;
+			}
+			var pointTest = abc >= d;
+			
+			var sameSide = (pointTest == playerTest);
+			
+			allSame = allSame &&  sameSide;
+			allDiff = allDiff && !sameSide;
+		}
+
+		if(allSame && allDiff)
+		{
+			return -2;
+		}
+		if(allSame)
+		{
+			return 1;
+		}
+
+		else if(allDiff)
+		{
+			return -1;
+		}
+		else
+		{
+			return 0;
+		}
+	}
+}
+
+window.onload = function()
+{
+    var fps = 60;
+	document.addEventListener("keydown", keydown);
+	document.addEventListener("keyup", keyup);
+	document.addEventListener("mousemove", mouseMoved);
+	
+	canvas.width = window.innerWidth;
+	canvas.height = window.innerHeight;
+	
+	setInterval( gameloop, 1000 / fps);
+}
+
+function gameloop()
+{
+    gameLogic();
+    paintScreen();
+}
+
+function minMax(val, min, max)
+{
+    return Math.min(Math.max(min, val), max);
+}
+
+function fpDrawPillar(prX, prY, prZ, prW, prH, prL)
+{
+	var propEnds = 0.03;
+	var propIn = 0.66;
+
+	var playerHeight = 100;
+	prY = playerHeight - prH - prY;
+	
+	fillPrism(prX + prW * (1 - propIn)/2, prY + prH * propEnds, 
+	    prZ + prL * (1 - propIn)/2, prW * propIn, prH - prH * propEnds*2, prL * propIn);
+	
+	
+	
+	var col = hexToRgb(ctx.fillStyle);
+	
+	ctx.fillStyle = ctx.fillStyle = 'rgb('+ parseInt(col.r / 2) +', '+ 
+	    parseInt(col.g / 2) +', '+ parseInt(col.b / 2) +')';
+	fillPrism(prX, prY, prZ, prW, prH * propEnds, prL);
+	fillPrism(prX, prY + prH - prH * propEnds, prZ, prW, prH * propEnds, prL);
+}
+
+function hexToRgb(hex) {
+  var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null;
+}
+var fff = 0;
+function fillPrism(prX, prY, prZ, prW, prH, prL)
+{
+    draw3dQuad(prX, prY, prZ, prX, prY, prZ + prL, prX + prW, prY, prZ + prL, prX + prW, prY, prZ);  //top
+	draw3dQuad(prX, prY, prZ, prX, prY, prZ + prL, prX, prY + prH, prZ + prL, prX, prY + prH, prZ);  //left
+	draw3dQuad(prX, prY, prZ, prX, prY + prH, prZ, prX + prW, prY + prH, prZ, prX + prW, prY, prZ);  //front
+	
+	draw3dQuad(prX + prW, prY + prH, prZ + prL, prX + prW, prY + prH, prZ,    //right
+	    prX + prW, prY, prZ, prX + prW, prY, prZ + prL);
+	draw3dQuad(prX + prW, prY + prH, prZ + prL, prX + prW, prY + prH, prZ,  //bottom
+	    prX, prY + prH, prZ, prX, prY + prH, prZ + prL);
+	draw3dQuad(prX + prW, prY + prH, prZ + prL, prX + prW, prY, prZ + prL,    //back
+	    prX, prY, prZ + prL, prX, prY + prH, prZ + prL);
+}
+
+function calcFov(deg)
+{
+	var ha = degToRad(deg/2);
+	var hw = canvas.width/2;
+	
+	var sd = hw / Math.tan(ha);
+	
+	return sd;
+}
+
+function degToRad(deg)
+{
+	return deg / 180 * Math.PI;
+}
+
+function vecFromPts(p1, p2)
+{
+	var returnVec = [];
+	for(var i=0; i<p1.length; i++)
+	{
+		returnVec.push(p2[i] - p1[i]);
+	}
+	
+	return returnVec;
+}
+
+function crossProduct(v1, v2)
+{
+	var a = v1[1] * v2[2] - v1[2] * v2[1];
+	var b = v1[2] * v2[0] - v1[0] * v2[2];
+	var c = v1[0] * v2[1] - v1[1] * v2[0];
+	
+	return [a,b,c];
+}
+
+function crossWithPoint(v1, v2, point)
+{
+	//making a plane from two vectors and a point it passes through
+	
+	var abc = crossProduct(v1, v2);
+	return findD(abc, point);
+}
+
+function findD(abc, point)
+{
+	//a = abc[0], b = abc[1], c = abc[2]
+	var d = abc[0] * point[0] + abc[1] * point[1] + abc[2] * point[2];
+	return [abc[0], abc[1], abc[2], d];
+}
+
+function distBtwnPtAndLine(p0, p1, p2)
+{
+	//so apparently we can find the distance between a point and line
+	//    | (p2 - p1) x (p1 - p0) |         where p0 is a point and
+	//   ---------------------------        p1 and p2 are the ends
+	//          | p2 - p1 |                 of our line segment
+	
+	//we do this because two lines of i cross the j plane and
+	//we want to figure out which one is closer to the j poly
+	
+	var p1p0 = [ p1[0] - p0[0], p1[1] - p0[1], p1[2] - p0[2] ];	 
+	var p2p1 = [ p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2] ];
+	var crossProd = crossProduct(p2p1, p1p0);
+	
+	var magOfCross = calcMagOfVector(crossProd);
+	var magOfp2p1 = calcMagOfVector(p2p1);
+	
+	return magOfCross / magOfp2p1;
+}
+
+function screenPlane()
+{
+	var yComp = Math.sin(fpYang);
+	var xzComp = Math.cos(fpYang);
+	
+	var xComp = xzComp * Math.sin(fpang);
+	var zComp = xzComp * Math.cos(fpang);
+	
+	var d = x * xComp + y * yComp + z * zComp;
+	
+	return [xComp, yComp, zComp, d+1];
+}
+
+function get3dPoint(x1, y1, z1)
+{
+	var x1Diff = x1 - x;
+	var y1Diff = y1 - y;
+	var z1Diff = z1 - z;
+	
+	var translatedX1 = x1Diff * Math.cos(-fpang) + z1Diff * Math.sin(-fpang);
+	var midTransZ = z1Diff * Math.cos(-fpang) - x1Diff * Math.sin(-fpang);
+	
+	var translatedY1 = y1Diff * Math.cos(-fpYang) + midTransZ * Math.sin(-fpYang);
+	var translatedZ1 = midTransZ * Math.cos(-fpYang) - y1Diff * Math.sin(-fpYang);
+	
+	var screenDistance = calcFov(fov);
+	
+	var dispX1 = (translatedX1 / translatedZ1) * screenDistance;
+	var dispY1 = (translatedY1 / translatedZ1) * screenDistance;
+	
+	var centerOfScreenX = canvas.width/2;
+	var centerOfScreenY = canvas.height/2;
+	
+	dispX1 += centerOfScreenX;
+	dispY1 += centerOfScreenY;
+	
+	return [dispX1, dispY1, translatedZ1];
+}
+
+function precisionRound(n, precision)
+{
+	return Math.round(n * precision) / precision;
+}
+
+function distBtwnPts(p1, p2)
+{
+	var sum = 0;
+	for(var i=0; i<p1.length; i++)
+	{
+		sum += Math.pow(p1[i] - p2[i], 2);
+	}
+	return Math.sqrt(sum);
+}
+
+function getIntersectionPoint(plane, p1, p2)
+{
+	var la = plane[0];
+	var lb = plane[1];
+	var lc = plane[2];
+	var ld = plane[3];
+
+	var xDiff = p1[0] - p2[0];
+	var yDiff = p1[1] - p2[1];
+	var zDiff = p1[2] - p2[2];
+
+	var lt = (ld - la * p1[0] - lb * p1[1] - lc * p1[2]) / (la * xDiff + lb * yDiff + lc * zDiff);
+	var liPoint = [p1[0] + xDiff * lt, p1[1] + yDiff * lt, p1[2] + zDiff * lt];
+	
+	return liPoint;
+}
+
+function lineIntersection2d(p1, p2, p3, p4)
+{
+	var m1 = (p2[1] - p1[1]) / (p2[0] - p1[0]);
+	var m2 = (p4[1] - p3[1]) / (p4[0] - p3[0]);
+	
+	var ret = [];
+	
+	ret[0] = (p1[0] * m1 + p3[1] - p3[0] * m2 - p1[1]) / (m1 - m2);
+	ret[1] = m1 * (ret[0] - p1[0]) + p1[1];
+	
+	return ret;
+}
+
+function draw3dQuad(x1, y1, z1, x2, y2, z2, x3, y3, z3, x4, y4, z4)
+{
+	var qd = [];
+
+	qd[0] = get3dPoint(x1, y1, z1);
+	qd[1] = get3dPoint(x2, y2, z2);
+	qd[2] = get3dPoint(x3, y3, z3);
+	qd[3] = get3dPoint(x4, y4, z4);
+	
+	var qd3d = [ [x1,y1,z1], [x2,y2,z2], [x3,y3,z3], [x4,y4,z4] ];
+	
+	var posZs = 0;
+	
+	for(var i=0; i<qd.length; i++)
+	{
+		posZs += (qd[i][2] >= 0);
+	}
+	
+	if(posZs == 0)
+	{
+		return;
+	}
+	else if(posZs < qd.length)
+	{
+		var scrPln = screenPlane();
+		
+		var newPoints = [];
+		
+		for(var i=0; i<qd.length; i++)
+		{
+			if(qd[i][2] < 0)
+			{
+				var prevIdx = (i + qd.length - 1) % qd.length;
+				var nextIdx = (i + 1) % qd.length;
+				var prevPt = qd[prevIdx][2] >= 0;
+				var nextPt = qd[nextIdx][2] >= 0;
+				
+				if(prevPt && nextPt)
+				{
+					var iPoint1 = getIntersectionPoint(scrPln, qd3d[i], qd3d[prevIdx]);
+					var iPoint2 = getIntersectionPoint(scrPln, qd3d[i], qd3d[nextIdx]);
+					
+					var n1 = get3dPoint(iPoint1[0], iPoint1[1], iPoint1[2]);
+					var n2 = get3dPoint(iPoint2[0], iPoint2[1], iPoint2[2]);
+					
+					newPoints[i] = [n1, n2];
+				}
+				else if(!prevPt && !nextPt)
+				{
+					newPoints[i] = -1;
+				}
+				else
+				{
+					var useIdx = -1;
+					if(prevPt) { useIdx = prevIdx; }
+					if(nextPt) { useIdx = nextIdx; }
+					
+					var liPoint = getIntersectionPoint(scrPln, qd3d[i], qd3d[useIdx]);
+					newPoints[i] = get3dPoint(liPoint[0], liPoint[1], liPoint[2]);
+				}
+			}
+			else
+			{
+				newPoints[i] = false;
+			}
+		}
+		
+		for(var i=0; i<newPoints.length; i++)
+		{
+			if(newPoints[i] == -1)
+			{
+				newPoints[i] = newPoints[(i+1) % newPoints.length];
+			}
+			if(newPoints[i] != false)
+			{
+				if(typeof(newPoints[i][0]) == 'number')
+				{
+					qd[i] = newPoints[i];
+				}
+				else
+				{
+					for(var j=qd.length-1; j>i; j--)
+					{
+						qd[j+1] = qd[j];
+					}
+					qd[i] = newPoints[i][0];
+					qd[i+1] = newPoints[i][1];
+				}
+			}
+		}
+	}
+	
+	var poly = new polygon(quadsToDraw.length, qd, qd3d, ctx.fillStyle);
+	quadsToDraw.push(poly);
+}
+
+function ctxDrawLine(x1, y1, x2, y2)
+{
+    ctx.beginPath();
+	ctx.moveTo(x1, y1);
+	ctx.lineTo(x2, y2);
+	ctx.stroke();
+}
+
+function ctxDrawPolygon(poly)
+{
+	ctx.beginPath();
+	ctx.moveTo(poly.dx[0], poly.dy[0])
+	for(var i=1; i<poly.dx.length; i++)
+	{
+		ctx.lineTo(poly.dx[i], poly.dy[i]);
+	}
+	ctx.closePath();
+	ctx.fill();
+}
+
+function controlLogic()
+{
+    var walkSpd = 3;
+	var turnMult = 3;
+	
+	if(shift)
+	{
+		walkSpd *= 2;
+	}
+
+	if (up)
+	{
+		x += Math.sin(fpang) * walkSpd;
+		z += Math.cos(fpang) * walkSpd;
+	}
+	else if (down)
+	{
+		x -= Math.sin(fpang) * walkSpd;
+		z -= Math.cos(fpang) * walkSpd;
+	}
+
+	if (right)
+	{
+		x += Math.cos(fpang) * walkSpd;
+		z -= Math.sin(fpang) * walkSpd;
+	}
+	else if (left)
+	{
+		x -= Math.cos(fpang) * walkSpd;
+		z += Math.sin(fpang) * walkSpd;
+	}
+	
+	fpang += xTurn * turnMult;
+	fpYang += yTurn * turnMult;
+	
+	xTurn = 0;
+	yTurn = 0;
+}
+
+function gameLogic()
+{
+    controlLogic();
+}
+
+function paintScreen()
+{
+	quadsToDraw = [];
+
+	ctx.fillStyle = "#696";
+	ctx.fillRect(0, 0, canvas.width, canvas.height);
+	
+	ctx.fillStyle = "#000";
+	
+	//draw3dQuad(356.33356,-200,415, 528.15692,-200,550.6979, 528.15692,-200,550.6979, 727.75225,-200,459.71292);
+	
+	for (var i = 1; i < 6; i++)
+	{
+		ctx.fillStyle = 'rgb('+ i*31 +', '+ ((i+2)%8)*31 +', '+ ((i+5)%8)*31 +')';
+		fpDrawPillar(550, 0, 200 + 400 * i, 50, 300, 50);
+		fpDrawPillar(200, 0, 200 + 400 * i, 50, 300, 50);
+		
+		//ctx.fillStyle = 'rgb('+ i*31 +', '+ ((i+2)%8)*31 +', '+ ((i+5)%8)*31 +')';
+		//fpDrawPillar(550, 800, 200 + 400 * i, 50, 300, 50);
+		//fpDrawPillar(200, 800, 220 + 400 * i, 50, 300, 50);
+		
+		//ctx.fillStyle = 'rgb('+ i*31 +', '+ ((i+2)%8)*31 +', '+ ((i+5)%8)*31 +')';
+		//fpDrawPillar(300, -1200, 220 + 400 * i, 50, 300, 50);
+	}
+	
+	ctx.fillStyle = "#f7d32f";
+	//draw3dQuad(450,-20,780, 800,-20,480, 800,40,510, 450,40,810);
+	
+	drawHouse(160, -250, 0, 500, 350, 500);
+	
+	renderQuads();
+}
+
+function drawTable(tx, ty, tz, tw, th, tl)
+{
+	ctx.fillStyle = "#917857";
+	
+	fillPrism(tx, ty, tz, tw, th/8, tl);                            //tabletop
+	fillPrism(tx+3*tw/8, ty+th/8, tz+3*tl/8, tw/4, 13*th/16, tl/4); //support column
+	fillPrism(tx+tw/4, ty + 15*th/16, tz+tl/4, tw/2, th/16, tl/2);  //table base
+}
+
+function drawChair(cx, cy, cz, cw, ch, cl, cdir)
+{
+	ctx.fillStyle = "#e6c687";
+	
+	fillPrism(cx, cy+5*ch/8, cz, cw, ch/16, cl);  //chair seat
+	
+	fillPrism(cx, cy+11*ch/16, cz, cw/8, 5*ch/16, cl/8);
+	fillPrism(cx+7*cw/8, cy+11*ch/16, cz, cw/8, 5*ch/16, cl/8);     //chair legs
+	fillPrism(cx+7*cw/8, cy+11*ch/16, cz+7*cl/8, cw/8, 5*ch/16, cl/8);
+	fillPrism(cx, cy+11*ch/16, cz+7*cl/8, cw/8, 5*ch/16, cl/8);
+	
+	switch(cdir)
+	{
+		case 0: fillPrism(cx, cy, cz, cw/8, 5*ch/8, cl); break;
+		case 1: fillPrism(cx, cy, cz, cw, 5*ch/8, cl/8); break;
+		case 2: fillPrism(cx+7*cw/8, cy, cz, cw/8, 5*ch/8, cl); break;
+		case 3: fillPrism(cx, cy, cz+7*cl/8, cw, 5*ch/8, cl/8); break;
+	}
+}
+
+function drawHouse(hx, hy, hz, hw, hh, hl)
+{
+	ctx.fillStyle = "#aba871";
+
+	draw3dQuad(hx, hy, hz, hx, hy, hz + hl, hx, hy + hh, hz + hl, hx, hy + hh, hz);  //left
+	draw3dQuad(hx, hy, hz, hx, hy + hh, hz, hx + hw, hy + hh, hz, hx + hw, hy, hz);  //front
+	
+	draw3dQuad(hx + hw, hy + hh, hz + hl, hx + hw, hy + hh, hz,    //right
+	    hx + hw, hy, hz, hx + hw, hy, hz + hl);
+		
+	ctx.fillStyle = "#cae4ed";
+		
+	draw3dQuad(hx + hw, hy + hh, hz + hl, hx + hw, hy + hh, hz,  //floor
+	    hx, hy + hh, hz, hx, hy + hh, hz + hl);
+		
+	ctx.fillStyle = "#d8dbb8";
+		
+	draw3dQuad(hx + hw/3, hy + hh, hz + hl, hx + hw/3, hy, hz + hl,    //back
+	    hx, hy, hz + hl, hx, hy + hh, hz + hl);
+		
+	draw3dQuad(hx + hw, hy + hh, hz + hl, hx + hw, hy, hz + hl,    //back
+	    hx + hw/2, hy, hz + hl, hx+hw/2, hy + hh, hz + hl);
+	draw3dQuad(hx + hw/3, hy, hz + hl, hx + hw/3, hy+hh/2, hz + hl,    //back
+	    hx + hw/2, hy+hh/2, hz + hl, hx+hw/2, hy, hz + hl);
+		
+	ctx.fillStyle = "#075175";
+		
+	draw3dQuad(hx, hy, hz, hx, hy, hz + hl, hx + hw/2, hy-hh, hz + hl/2, hx + hw/2, hy-hh, hz + hl/2); //roof
+	draw3dQuad(hx + hw/2, hy-hh, hz + hl/2, hx + hw/2, hy-hh, hz + hl/2, hx + hw, hy, hz, hx + hw, hy, hz + hl); //roof
+	draw3dQuad(hx, hy, hz, hx + hw/2, hy-hh, hz + hl/2, hx + hw/2, hy-hh, hz+hl/2, hx + hw, hy, hz); //roof opposite door
+	draw3dQuad(hx + hw/2, hy-hh, hz+hl/2, hx, hy, hz + hl, hx + hw, hy, hz+hl, hx + hw/2, hy-hh, hz+hl/2); //roof door
+	
+	
+	ctx.fillStyle = "#5c4c36";
+	fillPrism(hx+hw/3, hy+hh/2, hz+hl-hz/8, hw/50, hh/2, hl/8); //door
+	ctx.fillStyle = "#f2e82e";
+	fillPrism(hx+hw/3 - hw/50, hy+hh-hh/4, hz+hl-hz/8+hl/10, hw/50, hh/50, hl/80); //door handle 
+	
+	drawTable(hx+hw/4, hy+hh - hh/4, hz+hl/4, hw/4, hh/4, hl/4);
+	
+	drawChair(hx+hw/2, hy+hh - 3*hh/8, hz + 5*hl/16, hw/8, 3*hh/8, hl/8, 2);
+	drawChair(hx+hw/8, hy+hh - 3*hh/8, hz + 5*hl/16, hw/8, 3*hh/8, hl/8, 0);
+}
+
+function calcMagOfVector(vec)
+{
+	var sumOfSquares = 0;
+	for(var i=0; i<vec.length; i++)
+	{
+		sumOfSquares += Math.pow(vec[i], 2);
+	}
+	return Math.sqrt(sumOfSquares);
+}
+
+function polysIntersect(polyi, polyj)
+{
+	/*
+	
+	two polygons, P and Q, points of each are p1, p2, p3, p4 and q1, q2, q3, q4
+
+	v1 = < p2.x - p1.x, p2.y - p1.y >
+
+	v2 = perpendicularLine = < p1.y - p2.y, p2.x - p1.x >
+
+	v2 = <v2.x, v2.y> / sqrt((v2.x)^2 + (v2.y)^2)
+	
+	for (all points on both lines){
+		pro1 = projectedPoint =  v2.x * q1.x + v2.y * q1.y
+	}
+
+	find min and max or P and Q of projected pts
+	overlapping = ! (minP > maxQ || maxP < minQ)
+	break if !overlapping
+
+	repeat for all lines on both polys
+
+	if still overlapping, then polys intersect
+	
+	*/
+	
+	var iPolys = [polyi, polyj];
+	var overlapping = true;
+	
+	for(var i=0; i < 2 && overlapping; i++) //poly loop
+	{
+		var polyP = iPolys[i];
+		var ppl = polyP.dx.length;
+		
+		for(var p = 0; p < ppl && overlapping; p++) //line loop
+		{
+			var lilperp = [ polyP.dy[p] - polyP.dy[(p+1) % ppl], polyP.dx[(p+1) % ppl]  - polyP.dx[p] ];
+			var magnitude = Math.sqrt(Math.pow(lilperp[0], 2) + Math.pow(lilperp[1], 2));
+			var normVec = lilperp.map(x => x / magnitude);
+			
+			var polyMin = [Infinity, Infinity];
+			var polyMax = [-Infinity, -Infinity];
+			
+			for(j = 0; j < 2; j++)  //poly point loop
+			{
+				var chkPoly = iPolys[j];
+				
+				var cpl = chkPoly.dx.length;
+				
+				for(var q = 0; q < cpl; q++) //point loop
+				{
+					var projPt = normVec[0] * chkPoly.dx[q] + normVec[1] * chkPoly.dy[q];
+					polyMin[j] = Math.min(polyMin[j], projPt);
+					polyMax[j] = Math.max(polyMax[j], projPt);
+				}
+			}
+			
+			overlapping = !( polyMin[0] > polyMax[1] || polyMax[0] < polyMin[1] );
+		}
+	}
+	
+	return overlapping;
+}
+
+function swapPolysInner(polyi, polyj)
+{
+	var tswapStr = polyi.pid + " <-> " + polyj.pid;
+	if(triedSwapping.has(tswapStr) || polyi.pid == polyj.pid)
+	{
+		if(polysIntersect(polyi, polyj))
+		{
+			return false;
+		}
+		else
+		{
+			polyi.unsetMustBe(polyj);
+			polyj.unsetMustBe(polyi);
+			
+			return tswapStr;
+		}
+	}
+	else
+	{
+		triedSwapping.set(tswapStr, true);
+	}
+	for(var i=0; i<polyi.mustBeBefore.length; i++)
+	{
+		var idxSwap = polyj.curIdx;
+		var sPoly = polyi.mustBeBefore[i];
+		var idxMax = sPoly.curIdx;
+
+		if(idxSwap >= idxMax)
+		{
+			var ret = swapPolysInner(sPoly, polyj);
+			if(ret !== true)
+			{
+				if(polysIntersect(polyi, polyj))
+				{
+					return false;
+				}
+				else
+				{
+					polyi.unsetMustBe(polyj);
+					polyj.unsetMustBe(polyi);
+					
+					return tswapStr;
+				}
+			}
+		}
+	}
+	
+	for(var i=0; i<polyj.mustBeAfter.length; i++)
+	{
+		var idxSwapi = polyi.curIdx;
+		var sPolyj = polyj.mustBeAfter[i];
+		var idxMin = sPolyj.curIdx;
+
+		if(idxSwapi <= idxMin)
+		{
+			var ret = swapPolysInner(polyi, sPolyj);
+			if(ret !== true)
+			{
+				if(polysIntersect(polyi, polyj))
+				{
+					return false;
+				}
+				else
+				{
+					polyi.unsetMustBe(polyj);
+					polyj.unsetMustBe(polyi);
+					
+					return tswapStr;
+				}
+			}
+		}
+	}
+	
+	quadsToDraw[polyj.curIdx] = polyi;
+	quadsToDraw[polyi.curIdx] = polyj;
+	
+	var temp = polyj.curIdx;
+	polyj.curIdx = polyi.curIdx;
+	polyi.curIdx = temp;
+	
+	return true;
+}
+
+function swapPolys(polyi, polyj)
+{
+	var ret = swapPolysInner(polyi, polyj);
+	triedSwapping.clear();
+	
+	var tStr = polyi.pid + " <-> " + polyj.pid;
+	if(typeof(ret) == 'string' && ret != tStr)
+	{
+		ret = swapPolysInner(polyi, polyj);
+		triedSwapping.clear();
+	}
+
+	if(ret === true)
+	{
+		swapManage(polyi, polyj, true);
+	
+	}
+	else
+	{
+		polyi.swapAdd(polyj);
+		polyj.swapAdd(polyi);
+	}
+}
+
+function swapManage(polyi, polyj, afterFirst)
+{
+	if(afterFirst)
+	{
+		polyi.swapAddAfter(polyj);
+		polyj.swapAddBefore(polyi);
+	}
+	else
+	{
+		polyi.swapAddBefore(polyj);
+		polyj.swapAddAfter(polyi);
+	}
+	polyi.swapAdd(polyj);
+	polyj.swapAdd(polyi);
+}
+
+function renderQuads()
+{
+	quadsToDraw.sort(function(a, b){return  a.minDist - b.minDist});
+
+	for(var i=0; i<quadsToDraw.length; i++)
+	{
+		quadsToDraw[i].curIdx = i;
+	}
+	
+	for(var i=0; i<quadsToDraw.length; i++)
+	{
+		var polyi = quadsToDraw[i];
+		
+		for(var j=i+1; j<quadsToDraw.length; j++)
+		{
+			var polyj = quadsToDraw[j];
+			
+			if(polyi.swapHas(polyj))
+			{
+				continue;
+			}
+			
+			if(polyi.maxDist > polyj.minDist)
+			{	
+				if( !( polyj.minDx > polyi.maxDx || polyj.maxDx < polyi.minDx || 
+					   polyj.minDy > polyi.maxDy || polyj.maxDy < polyi.minDy ) )
+				{
+					var ptestj = polyi.planeTest(polyj);
+					var ptesti = polyj.planeTest(polyi);
+					
+					if(ptesti != 0 && ptesti == ptestj)
+					{
+						continue;
+					}
+					else if(ptestj > 0 || ptesti < 0)
+					{
+						swapManage(polyi, polyj, false);
+						continue;
+					}
+					else if(ptestj < 0 || ptesti > 0)
+					{
+						swapPolys(polyi, polyj);
+						i--;
+						break;
+					}
+					
+					/*
+					
+					complicatedPart:
+					find equation of plane of polygon j 
+					for all vertices of polygon i, check which side of the j-plane they are on
+					for adjacent points of i that are on opposite sides of the plane:
+						find line between points and find intersection point with plane
+						for each line of polygon j do a test to see whether the intersection is inside or outside
+						for the point which is outside, take the two j points that made up line segment, that's v1
+						v2 is the line of polygon i with which we found the intersection point
+						cross product to find planar equation, using one of the points of i as the point
+						if polygons are not intersecting, all points of i should be on one side of this new plane
+						which side of the plane it's on determines which one should be drawn first
+		
+					*/
+					
+					var ptCheck = [];
+				
+					var pl = polyi.x.length;
+				
+					for(var pts=0; pts < pl; pts++)
+					{
+						ptCheck[pts] = polyi.abovePlane(pts, polyj);
+					}
+					
+					var closerPoly = false;
+					var checkFailed = false;
+					var firstCompare = true;
+					var closestIPointDist = -1;
+					
+					for(var pts=0; pts < pl; pts++)
+					{
+						var lnCheck = (ptCheck[pts] != ptCheck[(pts+1) % pl]);
+						if(lnCheck)
+						{
+							var ivec = [ polyi.x[pts] - polyi.x[(pts+1) % pl], 
+									     polyi.y[pts] - polyi.y[(pts+1) % pl], polyi.z[pts] - polyi.z[(pts+1) % pl] ];
+							var it = (polyj.d - polyj.a * polyi.x[pts] - polyj.b * polyi.y[pts] - polyj.c * polyi.z[pts]) 
+									 / (polyj.a * ivec[0] + polyj.b * ivec[1] + polyj.c * ivec[2]);
+							var iPoint = [ polyi.x[pts] + ivec[0] * it, polyi.y[pts] + ivec[1] * it, polyi.z[pts] + ivec[2] * it];
+							
+							//iPoint is the intersection coors with the plane of j on an edge of i that crosses the plane
+							
+							var oj = [ polyj.a, polyj.b, polyj.c ]; //vector orthogonal to the plane of j
+							
+							var pjl = polyj.x.length;
+							var allInside = true;
+							var jToUse = -1;
+							
+							for(var jpts=0; jpts < pjl; jpts++)
+							{
+								var jp1 = (jpts+1) % pjl;
+								var jPtsvec = [polyj.x[jp1] - polyj.x[jpts], 
+											   polyj.y[jp1] - polyj.y[jpts], 
+											   polyj.z[jp1] - polyj.z[jpts]];
+							
+								//find cross-product of line perpendicular to j-plane and one of j's sides
+								//basically doing this 4 times makes a prism of infinite length and we
+								//want to find where iPoint is outside the box with oTest
+								
+								var [oa,ob,oc,od] = crossWithPoint(jPtsvec, oj, [polyj.x[jp1],polyj.y[jp1],polyj.z[jp1]]);
+								
+								var oTest = ( oa * iPoint[0] + ob * iPoint[1] + oc * iPoint[2] ) >= od;
+								var outside = oTest;
+								
+								if(outside)
+								{
+									allInside = false;
+									jToUse = jpts;
+									break;
+								}
+							}
+							
+							if(allInside)
+							{
+								checkFailed = true;
+								break;
+							}
+						
+							var jp1 = (jToUse+1) % pjl;  //jp1 = j plus 1
+							var jvec = [polyj.x[jp1] - polyj.x[jToUse], 
+										polyj.y[jp1] - polyj.y[jToUse], 
+								        polyj.z[jp1] - polyj.z[jToUse]];
+							
+							var linePt1 = [ polyj.x[jToUse], polyj.y[jToUse], polyj.z[jToUse] ];
+							var linePt2 = [ polyj.x[jp1], polyj.y[jp1], polyj.z[jp1] ];
+							var iPointDistToJSegment = distBtwnPtAndLine(iPoint, linePt1, linePt2);
+							
+							if(closestIPointDist != -1 && closestIPointDist <= iPointDistToJSegment)
+							{
+								continue; //no point in checking if line is farther away
+							}
+							else
+							{
+								closestIPointDist = iPointDistToJSegment;
+								firstCompare = true; //reset
+							}
+								
+							//we take the line of j outside the infinite box and cross product it with
+							//the line that crosses the j-plane, then set it at a point on polygon j
+							//thus we find a separating plane between the two polygons
+											
+							var [pa,pb,pc,pd] = crossWithPoint(ivec, jvec, linePt2);				
+							var playerTest = ( pa * x + pb * y +  pc * z ) >= pd; //side of plane player is on
+							
+							//idk what opi stands for, maybe orthogonal points iterator (?)							
+							for(var opi=0; opi < pl; opi++)
+							{
+								var jptTest = ( pa * polyi.x[opi] + 
+											    pb * polyi.y[opi] +
+											    pc * polyi.z[opi] ) >= pd; //side of plane each point of i is on
+												
+								//if player and jpts match, player and polygon i are on the same side of plane
+								var sameSide = (jptTest == playerTest);
+								
+								if(firstCompare)
+								{
+									closerPoly = sameSide;
+									firstCompare = false;
+								}
+								else
+								{
+									if(sameSide != closerPoly)
+									{
+										checkFailed = true;
+										break;
+									}
+								}
+							}
+						}
+					}
+					
+					if(checkFailed)
+					{
+						continue;
+					}
+					
+					if(closerPoly)
+					{
+						swapManage(polyi, polyj, false);
+						continue;
+					}
+					else
+					{
+						swapPolys(polyi, polyj);
+						i--;
+						break;
+					}
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	
+    for(var i=quadsToDraw.length-1; i>=0; i--)
+	{
+		var poly = quadsToDraw[i];
+		ctx.fillStyle = poly.fillStyle;
+		ctxDrawPolygon(poly);
+	}
+}
+
+function mouseMoved(evt)
+{
+	var mx = evt.movementX;
+	var my = evt.movementY;
+	
+	if(document.pointerLockElement === canvas)
+	{
+		xTurn = mx / canvas.width;
+	}
+	
+	if(document.pointerLockElement === canvas)
+	{
+		yTurn = my / canvas.height;
+	}
+}
+
+canvas.onclick = function() 
+{
+  canvas.requestPointerLock();
+}
+
+function keydown(evt)
+{
+	//console.log(evt.keyCode);
+	switch(evt.keyCode)
+	{
+		case 65:
+	    case 37: left = true; break;
+		case 87:
+		case 38: up = true; break;
+		case 68:
+		case 39: right = true; break;
+		case 83:
+		case 40: down = true; break;
+		case 16: shift = true; break;
+	}
+}
+
+function keyup(evt)
+{
+	switch(evt.keyCode)
+	{
+	    case 65:
+		case 37: left = false; break;
+		case 87:
+		case 38: up = false; break;
+		case 68:
+		case 39: right = false; break;
+		case 83:
+		case 40: down = false; break;
+		case 16: shift = false; break;
+	}
+}
+
+/*
+
+plane: take 3 points: p1, p2, p3
+
+vector 1 = v1 = < p2.x - p1.x, p2.y - p1.y, p2.z - p1.z >
+vector 2 = v2 = < p3.x - p1.x, p3.y - p1.y, p3.z - p1.z >
+
+matrix:  ijk
+	  v1 xyz
+	  v2 xyz
+
+ai + bj + ck = 
+
+i * (v1.y* v2.z - v1.z*v2.y) + j * (v1.x * v2.z - v1.z * v2.x) + k * (v1.x * v2.y - v1.y * v2.x)
+
+a = v1.y* v2.z - v1.z*v2.y
+b = v1.x * v2.z - v1.z * v2.x
+c = v1.x * v2.y - v1.y * v2.x
+
+a(x - p1.x) + b(y - p1.y) + c(z - p1.z) = 
+d = ax + by + cz = a * p1.x + b * p1.y + c * p1.z
+
+
+line: take 2 points: p4, p5
+
+v3 = < p4.x - p5.x, p4.y - p5.y, p4.z - p5.z >
+
+x = p4.x + v3.x * t
+y = p4.y + v3.y * t
+z = p4.z + v3.z * t
+
+intersection:
+
+ax + by + cz = d
+
+a(p4.x + v3.x * t) + b(p4.y + v.y * t) + c(p4.z + v3.z * t) = d
+a*p4.x + a*v3.x*t + b*p4.y + b*v3.y*t + c(p4.z + v3.z * t) = d
+t * (a*v3.x + b*v3.y + c*v3.z) + rest = d
+
+t = (d - a*p4.x - b*p4.y - c*p4.z) / (a*v3.x + b*v3.y + c*v3.z)
+
+*/
+
+</script></body></html>
