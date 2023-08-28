@@ -1,0 +1,64 @@
+<html>
+<head>
+<style>
+   body {
+      background-image: url('art.jpg');
+      background-repeat: repeat;
+      color: #333;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      text-align: center; /* Center-align content */
+    }
+
+    .content {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: rgba(255, 255, 255, 0.8);
+      padding: 20px;
+    }
+
+    h1 {
+      color: #555;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+
+    p {
+      margin-bottom: 10px;
+    }
+
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+</style>
+<script>
+  function displayImage() {
+    var textBox = document.getElementById("complaints-textbox");
+    var submitButton = document.getElementById("submit-button");
+    var header = document.getElementById("header"); // Get header element
+    var description = document.getElementById("description"); // Get description element
+    var image = document.createElement("img");
+    image.src = "yay2.png";
+    textBox.style.display = "none";
+    submitButton.style.display = "none";
+    header.style.display = "none"; // Hide header
+    description.style.display = "none"; // Hide description
+    document.body.appendChild(image);
+  }
+</script>
+</head>
+<body>
+<div class="content">
+  <h1 id="header">Complaints Section</h1>
+  <p id="description">If you have any complaints, please enter them below:</p>
+  <textarea id="complaints-textbox" rows="4" cols="50"></textarea><br>
+  <button id="submit-button" onclick="displayImage()">Submit</button>
+</div>
+</body>
+</html>
