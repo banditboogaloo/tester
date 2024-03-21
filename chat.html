@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Mandrill Chat</title>
     <link rel="icon" type="image/x-icon" href="https://banditboogaloo.com/art.jpg">
-    <meta content="JBMod Servers (NEW UI)" property="og:title" />
+    <meta content="The Mandrill Chat" property="og:title" />
     <meta content="goostbook!!!" property="og:description" />
     <meta content="https://thatwardrobeguy.neocities.org/endorsed.png" property="og:image" />
     <meta content="#b303d0" data-react-helmet="true" name="theme-color" />
@@ -150,39 +150,44 @@
         });
 
 
-        function addGuest() {
-            const nameInput = document.getElementById('guestName');
-            const name = nameInput.value;
 
+		function addGuest() {
+			const nameInput = document.getElementById('guestName');
+			const usernameInput = document.getElementById('guestUsername');
+			const name = nameInput.value;
+			const username = usernameInput.value;
 
-            if (!name) {
-                alert('gotta add sumthin bud');
-                return;
-            }
+			console.log("Name:", name);
+			console.log("Username:", username);
 
+			if (!name || !username) {
+				alert('fills ins!! all fields!!!!');
+				return;
+			}
 
-            fetch('https://guest.fiallaspares.com/api/addGuest', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `name=${encodeURIComponent(name)}`,
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert(`Message sent with ID: ${data.guestId}`);
-                        nameInput.value = '';
-                    } else {
-                        alert('shidded myself.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error adding guest:', error.message);
-                    alert('Failed to add guest.');
-                });
-        }
-    </script>
+			fetch('https://guest.fiallaspares.com/api/addGuest', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+				body: `name=${encodeURIComponent(name)}&username=${encodeURIComponent(username)}`,
+			})
+			.then(response => response.json())
+			.then(data => {
+				if (data.success) {
+					alert(`Message sent with ID: ${data.guestId}`);
+					nameInput.value = '';
+					usernameInput.value = ''; // Clearing input fields after successful submission
+				} else {
+					alert('Failed to add guest.');
+				}
+			})
+			.catch(error => {
+				console.error('Error adding guest:', error.message);
+				alert('Failed to add guest.');
+			});
+		}
+</script>
 </head>
 
 <body>
@@ -208,27 +213,35 @@
 
   <script>
 
-    function getGuestList() {
-      fetch('https://guest.fiallaspares.com/api/getGuests')
-        .then(response => response.json())
-        .then(data => {
-          const guestListItems = document.getElementById('guestListItems');
-          guestListItems.innerHTML = '';
+function getGuestList() {
+  fetch('https://guest.fiallaspares.com/api/getGuests')
+    .then(response => response.json())
+    .then(data => {
+      const guestListItems = document.getElementById('guestListItems');
+      guestListItems.innerHTML = '';
 
-          data.forEach(guest => {
-            const listItem = document.createElement('li');
-            listItem.textContent = guest.name;
-            guestListItems.appendChild(listItem);
-          });
-        })
-        .catch(error => {
-          console.error('Error fetching guest list:', error.message);
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-      getGuestList();
+      // Reverse the order of the array to display newest guests first
+      data.reverse().forEach(guest => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${guest.name} (${guest.username})`; // Include both name and username
+        guestListItems.appendChild(listItem);
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching guest list:', error.message);
     });
+}
+
+// Fetch new messages every 1 seconds B)
+function fetchNewMessages() {
+  getGuestList();
+  setTimeout(fetchNewMessages, 1000);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  getGuestList();
+  fetchNewMessages(); // Start fetching new messages
+});
   </script>
         </div>
     </div>
