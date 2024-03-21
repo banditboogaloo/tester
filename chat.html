@@ -1,114 +1,219 @@
-<html lang="en"><head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Chat with Username</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-    }
-    #chat-box {
-      height: 300px;
-      border: 1px solid #ccc;
-      overflow-y: scroll;
-      padding: 10px;
-    }
-    #input-box {
-      margin-top: 10px;
-    }
-    #admin-controls {
-      position: fixed;
-      bottom: 10px;
-      left: 10px;
-    }
-  </style>
-</head>
-<body>
-
-<div>
-  <label for="username">Username:</label>
-  <input type="text" id="username" placeholder="Enter your username">
-</div>
-
-<div id="chat-box"></div>
-
-<div id="input-box">
-  <input type="text" id="message-input" placeholder="Type your message...">
-  <button id="send-button">Send</button>
-</div>
-
-<div id="admin-controls">
-  <label for="admin-password">Admin Password:</label>
-  <input type="password" id="admin-password" placeholder="Enter admin password">
-  <button id="clear-button" onclick="clearChat()">Clear Chat</button>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>the mandrill chat (thanks wdye)</title>
+    <link rel="icon" type="image/x-icon" href="https://banditboogaloo.com/art.jpg">
+    <meta content="chat/guestbook" property="og:title" />
+    <meta content="goostbook!!!" property="og:description" />
+    <meta content="https://banditboogaloo.com/art.jpg" property="og:image" />
+    <meta content="#b303d0" data-react-helmet="true" name="theme-color" />
 
 <script>
-  // Admin password
-  var adminPassword = "smartfella88";
-
-  // Retrieve or initialize messages from local storage
-  var messages = JSON.parse(localStorage.getItem('chatMessages')) || [];
-
-  function displayMessages() {
-    var chatBox = document.getElementById('chat-box');
-    chatBox.innerHTML = ''; // Clear existing content
-
-    messages.forEach(function (msg) {
-      chatBox.innerHTML += `<p><strong>${msg.username}:</strong> ${msg.message}</p>`;
+ fetch('/api/serverList', {
+        headers: {
+            'X-Requested-From': 'index.html'
+        },
     });
-
-    chatBox.scrollTop = chatBox.scrollHeight; // Scroll to the bottom
-  }
-
-  function sendMessage() {
-    var messageInput = document.getElementById('message-input');
-    var usernameInput = document.getElementById('username');
-    var message = messageInput.value;
-    var username = usernameInput.value;
-
-    if (username.trim() === '') {
-      alert('Please enter a username.');
-      return;
-    }
-
-    if (message.trim() !== '') {
-      messages.push({ username: username, message: message });
-
-      // Save messages to local storage
-      localStorage.setItem('chatMessages', JSON.stringify(messages));
-
-      displayMessages(); // Update the chat box
-
-      messageInput.value = ''; // Clear the input field
-    }
-  }
-
-  function clearChat() {
-    var passwordInput = document.getElementById('admin-password');
-    var enteredPassword = passwordInput.value;
-
-    // Check if the entered password is correct
-    if (enteredPassword === adminPassword) {
-      // Clear messages and update local storage
-      messages = [];
-      localStorage.setItem('chatMessages', JSON.stringify(messages));
-      displayMessages(); // Update the chat box
-    } else {
-      alert('Incorrect admin password.');
-    }
-
-    // Clear the password input field
-    passwordInput.value = '';
-  }
-
-  // Attach the functions to the button click events
-  document.getElementById('send-button').addEventListener('click', sendMessage);
-
-  // Display existing messages when the page loads
-  displayMessages();
 </script>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
+ <style>
+  body {
+    background-image: url('maze.gif');
+    color: #333;
+    font-family: Arial, sans-serif;
+    background-size: cover;
+    margin: 0;
+    padding: 20px;
+    background-color: #333; /* Updated background color to match existing styles */
+  }
+
+  .container {
+    width: 80%;
+    margin: auto;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
+    font-family: 'Ubuntu', sans-serif;
+    padding: 20px;
+    background-color: #999;
+  }
+
+  .container h1 {
+    color: green;
+  }
+
+  ul {
+    list-style-type: none;
+  }
+
+  li {
+    list-style-type: none;
+  }
+
+  a {
+    color: #ffffff;
+    text-decoration: none; /* Added text-decoration to match existing styles */
+  }
+
+  a:hover {
+    text-decoration: underline; /* Added text-decoration to match existing styles */
+  }
+
+  hr {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: 0;
+    border-top: 1px solid #ccc;
+  }
+
+  body.dark-mode {
+    background-color: #efefef;
+    color: #000;
+  }
+
+  .container.dark-mode {
+    background-color: white;
+  }
+
+  .dark-mode-toggle {
+    font-size: 15px;
+    cursor: pointer;
+    margin: 10px;
+    background: none;
+    border: none;
+    outline: none;
+  }
+
+  .dark-mode-toggle.moon::before {
+    content: '\2600';
+    font-size: 17px;
+    color: #FFFF00;
+  }
+
+  .dark-mode-toggle.sun::before {
+    content: '\1F319';
+    color: #000000;
+  }
+
+  body.dark-mode a {
+    color: #000;
+  }
+
+  .content {
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: rgba(255, 255, 255, 0.65);
+    padding: 20px;
+  }
+
+  h1 {
+    color: #525;
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+
+  p {
+    margin-bottom: 10px;
+  }
+
+  a {
+    color: #001bff;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+</style>
+
+</head>
+
+<body>
+            <nav id="navbar">
+
+        function addGuest() {
+            const nameInput = document.getElementById('guestName');
+            const name = nameInput.value;
 
 
+            if (!name) {
+                alert('gotta add sumthin bud');
+                return;
+            }
 
-</body></html>
+
+            fetch('https://guest.fiallaspares.com/api/addGuest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `name=${encodeURIComponent(name)}`,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(`Message sent with ID: ${data.guestId}`);
+                        nameInput.value = '';
+                    } else {
+                        alert('shidded myself.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error adding guest:', error.message);
+                    alert('Failed to add guest.');
+                });
+        }
+    </script>
+</head>
+
+<body>
+
+    <div class="container">
+        <div id="container">
+            <h1>the mandrill chat</h1>
+            <hr>
+            <nav id="navbar">
+            </nav>
+            <label for="guestName">Message</label>
+            <input type="text" id="guestName" name="guestName">
+            <button onclick="addGuest()">Send</button>
+
+
+      <div id="guestList">
+        <h2>Messages</h2>
+        <ul id="guestListItems"></ul>
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    function getGuestList() {
+      fetch('https://guest.fiallaspares.com/api/getGuests')
+        .then(response => response.json())
+        .then(data => {
+          const guestListItems = document.getElementById('guestListItems');
+          guestListItems.innerHTML = '';
+
+          data.forEach(guest => {
+            const listItem = document.createElement('li');
+            listItem.textContent = guest.name;
+            guestListItems.appendChild(listItem);
+          });
+        })
+        .catch(error => {
+          console.error('Error fetching guest list:', error.message);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+      getGuestList();
+    });
+  </script>
+        </div>
+    </div>
+</body>
+
+</html>
