@@ -133,7 +133,7 @@
 
 <body>
             <nav id="navbar">
-<script>
+		<script>
 // Function to set a cookie with a specified name and value
 function setCookie(name, value, days) {
     const date = new Date();
@@ -170,7 +170,7 @@ function addGuest() {
     console.log("Username:", username);
 
     if (!name || !username) {
-        alert('idiot. fill in both fields!');
+        alert('Please fill in both name and username fields!');
         return;
     }
 
@@ -184,7 +184,7 @@ function addGuest() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            alert(`Message sent with ID: ${data.guestId}`);
+			console.log(`Message sent with ID: ${data.guestId}`);
             nameInput.value = '';
             nameInput.focus();
             setCookie('usernameLocked', 'true', 30); // Set a cookie to lock the username for 30 days
@@ -207,79 +207,86 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 });
 </script>
-</head>
+        <label for="guestUsername">usanem:</label>
+        <input type="text" id="guestUsername" name="guestUsername"><br><br>
+        <label for="guestName">message herez</label>
+        <input type="text" id="guestName" name="guestName">
+        <button id="sendButton" onclick="addGuest()">Send</button>
+        <div id="guestList">
+            <h2>epik bandit messagez</h2>
+            <ul id="guestListItems"></ul>
+        </div>
+    </center>
 
-<body>
+    <!-- Audio element for ding sound -->
+    <audio id="dingSound">
+        <source src="https://banditboogaloo.com/ding.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
 
-    <div class="container">
-        <div id="container">
-            <h1>The Mandrill Chat</h1>
-			<h2>thanks to our friends at fiallaspares.com</h2>
-            <hr>
-            <nav id="navbar">
-            </nav>
-			  <label for="guestUsername">Username:</label>
-<input type="text" id="guestUsername" name="guestUsername"><br><br>
-            <label for="guestName">Message</label>
-            <input type="text" id="guestName" name="guestName">
-            <button onclick="addGuest()">Send</button>
+       <script>
+          let previousMessageCount = 0;
 
+    function getGuestList() {
+        fetch('https://guest.fiallaspares.com/api/getGuests')
+            .then(response => response.json())
+            .then(data => {
+                const guestListItems = document.getElementById('guestListItems');
+                guestListItems.innerHTML = '';
 
-      <div id="guestList">
-        <h2>Messages</h2>
-        <ul id="guestListItems"></ul>
-      </div>
-    </div>
-  </div>
+                // Reverse the order of the array to display newest guests first
+                data.reverse().forEach(guest => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = `${guest.name} (${guest.username})`; // Include both name and username
+                    guestListItems.appendChild(listItem);
+                });
 
-  <audio id="dingSound">
-  <source src="https://banditboogaloo.com/ding.mp3" type="audio/mpeg">
-  Your browser does not support the audio element.
-</audio>
-  <script>
-let previousMessageCount = 0;
+                const newMessageCount = data.length;
+                if (newMessageCount > previousMessageCount) {
+                    playDingSound(); // Play ding sound when new messages arrive
+                }
+                previousMessageCount = newMessageCount;
+            })
+            .catch(error => {
+                console.error('Error fetching guest list:', error.message);
+            });
+    }
 
-function getGuestList() {
-  fetch('https://guest.fiallaspares.com/api/getGuests')
-    .then(response => response.json())
-    .then(data => {
-      const guestListItems = document.getElementById('guestListItems');
-      guestListItems.innerHTML = '';
+    function playDingSound() {
+        const dingSound = document.getElementById('dingSound');
+        dingSound.play();
+    }
 
-      // Reverse the order of the array to display newest guests first
-      data.reverse().forEach(guest => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `${guest.name} (${guest.username})`; // Include both name and username
-        guestListItems.appendChild(listItem);
-      });
+    // Fetch new messages every 1 second
+    function fetchNewMessages() {
+        getGuestList();
+        setTimeout(fetchNewMessages, 1000); // Changed to 1000 milliseconds for 1 second delay
+    }
 
-      const newMessageCount = data.length;
-      if (newMessageCount > previousMessageCount) {
-        playDingSound(); // Play ding sound when new messages arrive
-      }
-      previousMessageCount = newMessageCount;
-    })
-    .catch(error => {
-      console.error('Error fetching guest list:', error.message);
+    document.addEventListener('DOMContentLoaded', function () {
+        getGuestList();
+        fetchNewMessages();
+
+        // Add event listener for Enter key press on input fields
+        const sendButton = document.getElementById('sendButton');
+        const guestNameInput = document.getElementById('guestName');
+        const guestUsernameInput = document.getElementById('guestUsername');
+
+        guestNameInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendButton.click(); // Simulate click event on send button
+            }
+        });
+
+        guestUsernameInput.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendButton.click(); // Simulate click event on send button
+            }
+        });
     });
-}
-
-function playDingSound() {
-  const dingSound = document.getElementById('dingSound');
-  dingSound.play();
-}
-
-// Fetch new messages every 1 second
-function fetchNewMessages() {
-  getGuestList();
-  setTimeout(fetchNewMessages, 1000);
-}
-
-document.addEventListener('DOMContentLoaded', function () {
-  getGuestList();
-  fetchNewMessages();
-});
-  </script>
+    </script>
         </div>
     </div>
 </body>
