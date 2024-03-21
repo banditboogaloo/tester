@@ -1,218 +1,139 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Mandrill Chat</title>
-    <link rel="icon" type="image/x-icon" href="https://banditboogaloo.com/art.jpg">
-    <meta content="The Mandrill Chat" property="og:title" />
-    <meta content="goostbook!!!" property="og:description" />
-    <meta content="https://thatwardrobeguy.neocities.org/endorsed.png" property="og:image" />
-    <meta content="#b303d0" data-react-helmet="true" name="theme-color" />
-    <title>The Mandrill Chat</title>
+<html class="smella"><head></head><body>
+<title>(brought to you by wdye)</title>
+<style>
+body {
+	background-color: black;
+	font-family: "Bahnschrift", "Bahnschrift", cursive;
+}
 
-<script>
- fetch('/api/serverList', {
-        headers: {
-            'X-Requested-From': 'index.html'
-        },
-    });
-</script>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&display=swap" rel="stylesheet">
- <style>
-  body {
-    background-image: url('maze.gif');
-    color: #333;
-    font-family: Arial, sans-serif;
-    background-size: cover;
-    margin: 0;
-    padding: 20px;
-    background-color: #333; /* Updated background color to match existing styles */
-  }
+p {
+	color: white;
+}
 
-  .container {
-    width: 80%;
-    margin: auto;
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
-    font-family: 'Bahnschrift', sans-serif;
-    padding: 20px;
-    background-color: #888;
-  }
+a {
+	color: white;
+}
 
-  .container h1 {
-    color: purple;
-  }
+h2 {
+	color : white;
+}
 
-  ul {
+button {
+        border: 2px solid white; 
+        padding: 5px; 
+        text-decoration: none;
+		background-color: black;
+		color: white;
+		font-size: 17;
+}
+
+label {
+	color: white;
+}
+
+li {
     list-style-type: none;
-  }
+}
 
-  li {
+ul {
     list-style-type: none;
-  }
+}
 
-  a {
-    color: #ffffff;
-    text-decoration: none; /* Added text-decoration to match existing styles */
-  }
-
-  a:hover {
-    text-decoration: underline; /* Added text-decoration to match existing styles */
-  }
-
-  hr {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border: 0;
-    border-top: 1px solid #ccc;
-  }
-
-  body.dark-mode {
-    background-color: #efefef;
-    color: #000;
-  }
-
-  .container.dark-mode {
-    background-color: white;
-  }
-
-  .dark-mode-toggle {
-    font-size: 15px;
-    cursor: pointer;
-    margin: 10px;
-    background: none;
-    border: none;
-    outline: none;
-  }
-
-  .dark-mode-toggle.moon::before {
-    content: '\2600';
-    font-size: 17px;
-    color: #FFFF00;
-  }
-
-  .dark-mode-toggle.sun::before {
-    content: '\1F319';
-    color: #000000;
-  }
-
-  body.dark-mode a {
-    color: #000;
-  }
-
-  .content {
-    max-width: 800px;
-    margin: 0 auto;
-    background-color: rgba(255, 255, 255, 0.65);
-    padding: 20px;
-  }
-
-  h1 {
-    color: #555;
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-
-  p {
-    margin-bottom: 10px;
-  }
-
-  a {
-    color: #007bff;
-    text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
+#guestListItems li {
+      color: white;
+	  text-decoration: none;
+}
 </style>
+<center>
+<h2>The Mandrill Chat</h2>
+<hr>
+<script>
+// Function to set a cookie with a specified name and value
+function setCookie(name, value, days) {
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = "expires=" + date.toUTCString();
+    document.cookie = name + "=" + value + ";" + expires + ";path=/";
+}
 
-</head>
+// Function to get the value of a cookie by its name
+function getCookie(name) {
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const cookies = decodedCookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.startsWith(name + '=')) {
+            return cookie.substring(name.length + 1);
+        }
+    }
+    return "";
+}
 
-<body>
-            <nav id="navbar">
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const darkModeToggle = document.createElement('button');
-            darkModeToggle.className = 'dark-mode-toggle moon';
-            darkModeToggle.addEventListener('click', toggleDarkMode);
+// Function to check if the username is locked based on the presence of a cookie
+function isUsernameLocked() {
+    return !!getCookie('usernameLocked');
+}
 
-            document.body.insertBefore(darkModeToggle, document.body.firstChild);
+function addGuest() {
+    const nameInput = document.getElementById('guestName');
+    const usernameInput = document.getElementById('guestUsername');
+    const name = nameInput.value;
+    const username = usernameInput.value;
 
-            function toggleDarkMode() {
-                document.body.classList.toggle('dark-mode');
-                document.querySelector('.container').classList.toggle('dark-mode');
-                darkModeToggle.classList.toggle('moon');
-                darkModeToggle.classList.toggle('sun');
-            }
-        });
+    console.log("Name:", name);
+    console.log("Username:", username);
 
+    if (!name || !username) {
+        alert('Fill in both the fields, dummy.');
+        return;
+    }
 
+    fetch('https://guest.fiallaspares.com/api/addGuest', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `name=${encodeURIComponent(name)}&username=${encodeURIComponent(username)}`,
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(`Message sent with ID: ${data.guestId}`);
+            nameInput.value = '';
+            nameInput.focus();
+            setCookie('usernameLocked', 'true', 30); // Set a cookie to lock the username for 30 days
+        } else {
+            alert('Failed to add guest.');
+        }
+    })
+    .catch(error => {
+        console.error('Error adding guest:', error.message);
+        alert('Failed to add guest.');
+    });
+}
 
-		function addGuest() {
-			const nameInput = document.getElementById('guestName');
-			const usernameInput = document.getElementById('guestUsername');
-			const name = nameInput.value;
-			const username = usernameInput.value;
-
-			console.log("Name:", name);
-			console.log("Username:", username);
-
-			if (!name || !username) {
-				alert('fills ins!! all fields!!!!');
-				return;
-			}
-
-			fetch('https://guest.fiallaspares.com/api/addGuest', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/x-www-form-urlencoded',
-				},
-				body: `name=${encodeURIComponent(name)}&username=${encodeURIComponent(username)}`,
-			})
-			.then(response => response.json())
-			.then(data => {
-				if (data.success) {
-					alert(`Message sent with ID: ${data.guestId}`);
-					nameInput.value = '';
-					usernameInput.value = ''; // Clearing input fields after successful submission
-				} else {
-					alert('Failed to add guest.');
-				}
-			})
-			.catch(error => {
-				console.error('Error adding guest:', error.message);
-				alert('Failed to add guest.');
-			});
-		}
+document.addEventListener('DOMContentLoaded', function () {
+    const usernameInput = document.getElementById('guestUsername');
+    if (isUsernameLocked()) {
+        usernameInput.disabled = true; // Disable the username input if it's locked
+    }
+});
 </script>
-</head>
-
-<body>
-
-    <div class="container">
-        <div id="container">
-            <h1>The Mandrill Chat</h1>
-			<h2>Brought to you by WDYE (reload to see new messages)</h2>
-            <hr>
-            <nav id="navbar">
-            </nav>
-            <label for="guestName">Message</label>
+  <label for="guestUsername">usanem:</label>
+<input type="text" id="guestUsername" name="guestUsername"><br><br>
+  <label for="guestName">message herez</label>
             <input type="text" id="guestName" name="guestName">
             <button onclick="addGuest()">Send</button>
 
 
       <div id="guestList">
-        <h2>Messages</h2>
-        <ul id="guestListItems"></ul>
+        <h2>epik bandit messagez</h2>
+        <ul id="guestListItems"> </ul>
       </div>
-    </div>
-  </div>
+    
+  
 
   <script>
-
 function getGuestList() {
   fetch('https://guest.fiallaspares.com/api/getGuests')
     .then(response => response.json())
@@ -240,11 +161,8 @@ function fetchNewMessages() {
 
 document.addEventListener('DOMContentLoaded', function () {
   getGuestList();
-  fetchNewMessages(); // Start fetching new messages
+  fetchNewMessages(); 
 });
   </script>
-        </div>
-    </div>
-</body>
 
-</html>
+</center></body></html>
