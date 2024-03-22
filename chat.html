@@ -1,139 +1,78 @@
-<html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Mandrill Chat</title>
-    <link rel="icon" type="image/x-icon" href="https://banditboogaloo.com/art.jpg">
-    <meta content="a mandrill's dream...." property="og:title">
-    <meta content="mandrill chat!!!" property="og:description">
-    <meta content="https://banditboogaloo.com/art.jpg" property="og:image">
-    <meta content="#b303d0" data-react-helmet="true" name="theme-color">
-    <title>The Mandrill Chat</title>
+<!DOCTYPE html>
+<html>
+<head>
+<title>The Mandrill Chat</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <style>
+    body {
+      background-image: url('maze.gif');
+	  background-repeat: repeat;
+      color: #333;
+      font-family: Arial, sans-serif;
+      background-size: cover;
+      margin: 0;
+      padding: 20px;
+    }
 
-<script>
- fetch('/api/serverList', {
-        headers: {
-            'X-Requested-From': 'index.html'
-        },
-    });
-</script>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;700&amp;display=swap" rel="stylesheet">
- <style>
-  body {
+		ul {
+			list-style-type: none;
+			padding: 0;
+			
+			margin: 15px 0;
+		}
+		
+		br {}
+		
+		li {
+			list-style-type: none;
+			padding: 0;
+			
+			margin: 15px 0;
+		}
 
-    color: #980;
-    font-size: 24px;
-    font-family: Trebuchet MS, Trebuchet MS;
-    background-size: cover;
-    margin: 0;
-    padding: 20px;
-    background-color: #111; /* Updated background color to match existing styles */
-  }
+    .content {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: rgba(255, 255, 255, 0.65); /* Adding a semi-transparent white background to the content area */
+      padding: 20px;
+    }
 
-  .container {
-    width: 80%;
-    margin: auto;
-    border: none;
-    border-radius: 10px;
-    box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.2);
-    font-family: 'Trebuchet MS', sans-serif;
-    padding: 20px;
-    background-color: #888;
-  }
+    h1 {
+      color: #555;
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
 
-  .container h1 {
-    color: purple;
-  }
+    p {
+      margin-bottom: 10px;
+    }
 
-  ul {
-    list-style-type: none;
-  }
+    a {
+      color: #007bff;
+      text-decoration: none;
+    }
 
-  li {
-    list-style-type: none;
-  }
+    a:hover {
+      text-decoration: underline;
+    }
 
-  a {
-    color: #ffffff;
-    text-decoration: none; /* Added text-decoration to match existing styles */
-  }
-
-  a:hover {
-    text-decoration: underline; /* Added text-decoration to match existing styles */
-  }
-
-  hr {
-    margin-top: 20px;
-    margin-bottom: 20px;
-    border: 0;
-    border-top: 1px solid #ccc;
-  }
-
-  body.dark-mode {
-    background-color: #efefef;
-    color: #000;
-  }
-
-  .container.dark-mode {
-    background-color: white;
-  }
-
-  .dark-mode-toggle {
-    font-size: 15px;
-    cursor: pointer;
-    margin: 10px;
-    background: none;
-    border: none;
-    outline: none;
-  }
-
-  .dark-mode-toggle.moon::before {
-    content: '\2600';
-    font-size: 17px;
-    color: #FFFF00;
-  }
-
-  .dark-mode-toggle.sun::before {
-    content: '\1F319';
-    color: #000000;
-  }
-
-  body.dark-mode a {
-    color: #000;
-  }
-
-  .content {
-    max-width: 800px;
-    margin: 0 auto;
-    background-color: rgba(255, 255, 255, 0.65);
-    padding: 20px;
-  }
-
-  h1 {
-    color: #555;
-    font-size: 24px;
-    margin-bottom: 20px;
-  }
-
-  p {
-    margin-bottom: 10px;
-  }
-
-  a {
-    color: #007bff;
-    text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-</style>
-
+    #content-overlay {
+      none;
+    }
+  </style>
 </head>
-
 <body>
-            <nav id="navbar">
+  <div id="content-overlay">
+    <div class="content">
+      <h1>The Mandrill Chat</h1>
+		
+		
+		<audio id="backgroundMusic" loop>
+		<source src="https://fiallaspares.com/elepikchat/fundofesteem.mp3" type="audio/mpeg">
+		Your browser does not support the audio element.
+		</audio>	
+        <hr>
 		<script>
-// Function to set a cookie with a specified name and value
 function setCookie(name, value, days) {
     const date = new Date();
     date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
@@ -141,7 +80,6 @@ function setCookie(name, value, days) {
     document.cookie = name + "=" + value + ";" + expires + ";path=/";
 }
 
-// Function to get the value of a cookie by its name
 function getCookie(name) {
     const decodedCookie = decodeURIComponent(document.cookie);
     const cookies = decodedCookie.split(';');
@@ -154,7 +92,6 @@ function getCookie(name) {
     return "";
 }
 
-// Function to check if the username is locked based on the presence of a cookie
 function isUsernameLocked() {
     return !!getCookie('usernameLocked');
 }
@@ -165,11 +102,8 @@ function addGuest() {
     const name = nameInput.value;
     const username = usernameInput.value;
 
-    console.log("Name:", name);
-    console.log("Username:", username);
-
     if (!name || !username) {
-        alert('Please fill in both name and username fields!');
+        alert('Fill in both fields.');
         return;
     }
 
@@ -180,42 +114,51 @@ function addGuest() {
         },
         body: `name=${encodeURIComponent(name)}&username=${encodeURIComponent(username)}`,
     })
-    .then(response => response.json())
+    .then(response => {
+        if (response.status === 429) {
+            alert('noes... you spammed too much....');
+            throw new Error('2 much spam');
+        }
+        if (!response.ok) {
+            throw new Error('Network response was is not ok, cheer him up..');
+        }
+        return response.json();
+    })
     .then(data => {
         if (data.success) {
-			console.log(`Message sent with ID: ${data.guestId}`);
+            console.log(`Message sent with ID: ${data.guestId}`);
             nameInput.value = '';
             nameInput.focus();
-            setCookie('usernameLocked', 'true', 30); // Set a cookie to lock the username for 30 days
-            setCookie('lockedUsernameValue', username, 30); // Save the locked username in a cookie
+            setCookie('usernameLocked', 'true', 30);
+            setCookie('lockedUsernameValue', username, 30);
         } else {
-            alert('Failed to add guest.');
+            alert('failed 2 add message....');
         }
     })
     .catch(error => {
-        console.error('Error adding guest:', error.message);
-        alert('Failed to add guest.');
+        console.error('error......', error.message);
+        alert('failed to send messagez....');
     });
 }
 
 document.addEventListener('DOMContentLoaded', function () {
     const usernameInput = document.getElementById('guestUsername');
     if (isUsernameLocked()) {
-        usernameInput.value = getCookie('lockedUsernameValue'); // Restore the locked username
-        usernameInput.disabled = true; // Disable the username input if it's locked
+        usernameInput.value = getCookie('lockedUsernameValue');
+        usernameInput.disabled = true;
     }
 });
 </script>
-        <label for="guestUsername">username</label>
-        <input type="text" id="guestUsername" name="guestUsername"><br><br>
-        <label for="guestName">message</label>
-        <input type="text" id="guestName" name="guestName">
-        <button id="sendButton" onclick="addGuest()">Send</button>
+
+		<br>
+        <input type="text" id="guestUsername" name="guestUsername" placeholder="cooldude69"><br><br>
+        <input type="text" id="guestName" name="guestName" placeholder="watz poppin my doods">
+		<br>
+        <button id="sendButton" onclick="addGuest()">Send Message</button>
         <div id="guestList">
-            <h2>the mandrill chat (partnered with fiallaspares.com's el epik chat)</h2><br>
             <ul id="guestListItems"></ul>
         </div>
-    
+    </center>
 
     <!-- Audio element for ding sound -->
     <audio id="dingSound">
@@ -223,72 +166,143 @@ document.addEventListener('DOMContentLoaded', function () {
         Your browser does not support the audio element.
     </audio>
 
-       <script>
-          let previousMessageCount = 0;
+ <script>
+        let previousMessageCount = 0;
+function getGuestList() {
+    fetch('https://guest.fiallaspares.com/api/getGuests')
+        .then(response => response.json())
+        .then(data => {
+            const guestListItems = document.getElementById('guestListItems');
+            guestListItems.innerHTML = '';
 
-    function getGuestList() {
-        fetch('https://guest.fiallaspares.com/api/getGuests')
-            .then(response => response.json())
-            .then(data => {
-                const guestListItems = document.getElementById('guestListItems');
-                guestListItems.innerHTML = '';
+            // Slice the data array to include only the last 10 elements
+            const lastTenMessages = data.slice(-35);
 
-                // Reverse the order of the array to display newest guests first
-                data.reverse().forEach(guest => {
-                    const listItem = document.createElement('li');
-                    listItem.textContent = `${guest.name} (${guest.username})`; // Include both name and username
-                    guestListItems.appendChild(listItem);
-                });
+            // Reverse the order of the array to display newest guests first
+            lastTenMessages.reverse().forEach(guest => {
+                const listItem = document.createElement('li');
+                const messageBox = document.createElement('div'); // Create a div for message box
+                messageBox.classList.add('message-box'); // Add class for styling
 
-                const newMessageCount = data.length;
-                if (newMessageCount > previousMessageCount) {
-                    playDingSound(); // Play ding sound when new messages arrive
+                // Check if the name contains ":troll:" or ":clueless:"
+                if (guest.name.includes(':troll:') || guest.name.includes(':clueless:')) {
+                    const trollParts = guest.name.split(':troll:');
+                    trollParts.forEach((part, index) => {
+                        const cluelessParts = part.split(':clueless:');
+                        const messageContainer = document.createElement('div'); // Container for text and images
+                        cluelessParts.forEach((cluelessPart, cluelessIndex) => {
+                            // Append the text part
+                            messageContainer.appendChild(document.createTextNode(cluelessPart));
+                            // If it's not the last part, append the clueless image
+                            if (cluelessIndex < cluelessParts.length - 1) {
+                                const cluelessImage = document.createElement('img');
+                                cluelessImage.src = 'https://fiallaspares.com/elepikchat/clueless.png';
+                                cluelessImage.style.width = '25px'; // Set a fixed width for the image (adjust as needed)
+                                cluelessImage.style.height = 'auto'; // Maintain aspect ratio
+                                cluelessImage.style.verticalAlign = 'middle'; // Align the image vertically
+                                messageContainer.appendChild(cluelessImage);
+                            }
+                        });
+                        // If it's not the last part, append the troll image
+                        if (index < trollParts.length - 1) {
+                            const trollImage = document.createElement('img');
+                            trollImage.src = 'https://fiallaspares.com/elepikchat/troll.png';
+                            trollImage.style.width = '30px'; // Set a fixed width for the image (adjust as needed)
+                            trollImage.style.height = 'auto'; // Maintain aspect ratio
+                            trollImage.style.verticalAlign = 'middle'; // Align the image vertically
+                            messageContainer.appendChild(trollImage);
+                        }
+                        // Append the container to the message box
+                        messageBox.appendChild(messageContainer);
+                    });
+                    // Append username separately if it exists
+                    if (guest.username) {
+                        const usernameSpan = document.createElement('span');
+                        usernameSpan.textContent = ` (${guest.username})`;
+                        messageBox.appendChild(usernameSpan);
+                    }
+                } else {
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = `${guest.name}`;
+                    messageBox.appendChild(nameSpan); // Display name only
+
+                    if (guest.username) {
+                        const usernameSpan = document.createElement('span');
+                        usernameSpan.textContent = ` (${guest.username})`; // Append username if it exists
+                        messageBox.appendChild(usernameSpan);
+                    }
                 }
-                previousMessageCount = newMessageCount;
-            })
-            .catch(error => {
-                console.error('Error fetching guest list:', error.message);
+                listItem.appendChild(messageBox); // Append message box to list item
+                guestListItems.appendChild(listItem);
             });
-    }
 
-    function playDingSound() {
-        const dingSound = document.getElementById('dingSound');
-        dingSound.play();
-    }
-
-    // Fetch new messages every 1 second
-    function fetchNewMessages() {
-        getGuestList();
-        setTimeout(fetchNewMessages, 1000); // Changed to 1000 milliseconds for 1 second delay
-    }
-
-    document.addEventListener('DOMContentLoaded', function () {
-        getGuestList();
-        fetchNewMessages();
-
-        // Add event listener for Enter key press on input fields
-        const sendButton = document.getElementById('sendButton');
-        const guestNameInput = document.getElementById('guestName');
-        const guestUsernameInput = document.getElementById('guestUsername');
-
-        guestNameInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                sendButton.click(); // Simulate click event on send button
+            const newMessageCount = data.length;
+            if (newMessageCount > previousMessageCount) {
+                playDingSound(); // Play ding sound when new messages arrive
             }
+            previousMessageCount = newMessageCount;
+        })
+        .catch(error => {
+            console.error('Error fetching guest list:', error.message);
         });
+}
 
-        guestUsernameInput.addEventListener('keydown', function(event) {
-            if (event.key === 'Enter') {
-                event.preventDefault();
-                sendButton.click(); // Simulate click event on send button
-            }
+
+
+
+        function playDingSound() {
+            const dingSound = document.getElementById('dingSound');
+            dingSound.play();
+        }
+
+        // Fetch new messages every 1 second
+        function fetchNewMessages() {
+            getGuestList();
+            setTimeout(fetchNewMessages, 100);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            getGuestList();
+            fetchNewMessages();
+
+            // Add event listener for Enter key press on input fields
+            const sendButton = document.getElementById('sendButton');
+            const guestNameInput = document.getElementById('guestName');
+            const guestUsernameInput = document.getElementById('guestUsername');
+
+            guestNameInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    sendButton.click(); // Simulate click event on send button
+                }
+            });
+
+            guestUsernameInput.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    sendButton.click(); // Simulate click event on send button
+                }
+            });
         });
-    });
     </script>
-        
-    
+<script>
+const backgroundMusic = document.getElementById('backgroundMusic');
+const toggleButton = document.getElementById('toggleButton');
 
+let isMusicPlaying = false;
 
+toggleButton.addEventListener('click', () => {
+  if (!isMusicPlaying) {
+    backgroundMusic.play();
+    toggleButton.textContent = 'pouse musik';
+  } else {
+    backgroundMusic.pause();
+    toggleButton.textContent = 'play musik';
+  }
+  isMusicPlaying = !isMusicPlaying;
+});
+    </div>
+  </div>
 
-</nav></body></html>
+</body>
+</html>
