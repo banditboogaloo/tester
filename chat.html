@@ -71,7 +71,8 @@
 		<audio id="backgroundMusic" loop>
 		<source src="https://fiallaspares.com/elepikchat/fundofesteem.mp3" type="audio/mpeg">
 		Your browser does not support the audio element.
-		</audio>	
+		</audio>
+		<button id="toggleButton">Play Music</button>
         <hr>
 		<script>
 function setCookie(name, value, days) {
@@ -295,10 +296,10 @@ let isMusicPlaying = false;
 toggleButton.addEventListener('click', () => {
   if (!isMusicPlaying) {
     backgroundMusic.play();
-    toggleButton.textContent = 'pouse musik';
+    toggleButton.textContent = 'Pause Music';
   } else {
     backgroundMusic.pause();
-    toggleButton.textContent = 'play musik';
+    toggleButton.textContent = 'Play Music';
   }
   isMusicPlaying = !isMusicPlaying;
 });
