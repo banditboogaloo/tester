@@ -171,84 +171,59 @@ document.addEventListener('DOMContentLoaded', function () {
 
  <script>
         let previousMessageCount = 0;
-function getGuestList() {
-    fetch('https://guest.fiallaspares.com/api/getGuests')
-        .then(response => response.json())
-        .then(data => {
-            const guestListItems = document.getElementById('guestListItems');
-            guestListItems.innerHTML = '';
+    function getGuestList() {
+        fetch('https://guest.fiallaspares.com/api/getGuests')
+            .then(response => response.json())
+            .then(data => {
+                const guestListItems = document.getElementById('guestListItems');
+                guestListItems.innerHTML = '';
 
-            // Slice the data array to include only the last 10 elements
-            const lastTenMessages = data.slice(-35);
+                // Reverse the order of the array to display newest guests first
+                data.reverse().forEach(guest => {
+                    const listItem = document.createElement('li');
+                    const messageBox = document.createElement('div'); // Create a div for message box
+                    messageBox.classList.add('message-box'); // Add class for styling
 
-            // Reverse the order of the array to display newest guests first
-            lastTenMessages.reverse().forEach(guest => {
-                const listItem = document.createElement('li');
-                const messageBox = document.createElement('div'); // Create a div for message box
-                messageBox.classList.add('message-box'); // Add class for styling
+                    // Define replacements for multiple emojis
+						const replacements = {
+							'<:troll:1221226755004825600>': '<img src="troll.png" style="width: 30px; height: auto; vertical-align: middle;">',
+							'<:clueless:1221226320214626407>': '<img src="clueless.png" style="width: 25px; height: auto; vertical-align: middle;">',
+							'<:steamsalty:1221228132577579130>': '<img src="steamsalty.png" style="width: 25px; height: auto; vertical-align: middle;">',
+							':troll:': '<img src="troll.png" style="width: 30px; height: auto; vertical-align: middle;">',
+							':clueless:': '<img src="clueless.png" style="width: 25px; height: auto; vertical-align: middle;">',
+							':steamsalty:': '<img src="steamsalty.png" style="width: 25px; height: auto; vertical-align: middle;">'
+						};
 
-                // Check if the name contains ":troll:" or ":clueless:"
-                if (guest.name.includes(':troll:') || guest.name.includes(':clueless:')) {
-                    const trollParts = guest.name.split(':troll:');
-                    trollParts.forEach((part, index) => {
-                        const cluelessParts = part.split(':clueless:');
-                        const messageContainer = document.createElement('div'); // Container for text and images
-                        cluelessParts.forEach((cluelessPart, cluelessIndex) => {
-                            // Append the text part
-                            messageContainer.appendChild(document.createTextNode(cluelessPart));
-                            // If it's not the last part, append the clueless image
-                            if (cluelessIndex < cluelessParts.length - 1) {
-                                const cluelessImage = document.createElement('img');
-                                cluelessImage.src = 'https://fiallaspares.com/elepikchat/clueless.png';
-                                cluelessImage.style.width = '25px'; // Set a fixed width for the image (adjust as needed)
-                                cluelessImage.style.height = 'auto'; // Maintain aspect ratio
-                                cluelessImage.style.verticalAlign = 'middle'; // Align the image vertically
-                                messageContainer.appendChild(cluelessImage);
-                            }
-                        });
-                        // If it's not the last part, append the troll image
-                        if (index < trollParts.length - 1) {
-                            const trollImage = document.createElement('img');
-                            trollImage.src = 'https://fiallaspares.com/elepikchat/troll.png';
-                            trollImage.style.width = '30px'; // Set a fixed width for the image (adjust as needed)
-                            trollImage.style.height = 'auto'; // Maintain aspect ratio
-                            trollImage.style.verticalAlign = 'middle'; // Align the image vertically
-                            messageContainer.appendChild(trollImage);
+                    // Replace all occurrences of defined emojis with corresponding images
+                    let nameWithImages = guest.name;
+                    for (const emoji in replacements) {
+                        if (replacements.hasOwnProperty(emoji)) {
+                            nameWithImages = nameWithImages.replace(new RegExp(emoji, 'g'), replacements[emoji]);
                         }
-                        // Append the container to the message box
-                        messageBox.appendChild(messageContainer);
-                    });
-                    // Append username separately if it exists
-                    if (guest.username) {
-                        const usernameSpan = document.createElement('span');
-                        usernameSpan.textContent = ` (${guest.username})`;
-                        messageBox.appendChild(usernameSpan);
                     }
-                } else {
-                    const nameSpan = document.createElement('span');
-                    nameSpan.textContent = `${guest.name}`;
-                    messageBox.appendChild(nameSpan); // Display name only
+
+                    messageBox.innerHTML = nameWithImages; // Set inner HTML of message box with replaced text
 
                     if (guest.username) {
                         const usernameSpan = document.createElement('span');
                         usernameSpan.textContent = ` (${guest.username})`; // Append username if it exists
                         messageBox.appendChild(usernameSpan);
                     }
-                }
-                listItem.appendChild(messageBox); // Append message box to list item
-                guestListItems.appendChild(listItem);
-            });
 
-            const newMessageCount = data.length;
-            if (newMessageCount > previousMessageCount) {
-                playDingSound(); // Play ding sound when new messages arrive
-            }
-            previousMessageCount = newMessageCount;
-        })
-        .catch(error => {
-            console.error('Error fetching guest list:', error.message);
-        });
-}
+                    listItem.appendChild(messageBox); // Append message box to list item
+                    guestListItems.appendChild(listItem);
+                });
+
+                const newMessageCount = data.length;
+                if (newMessageCount > previousMessageCount) {
+                    playDingSound(); // Play ding sound when new messages arrive
+                }
+                previousMessageCount = newMessageCount;
+            })
+            .catch(error => {
+                console.error('Error fetching guest list:', error.message);
+            });
+    }
 
 
 
