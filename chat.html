@@ -178,11 +178,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 const guestListItems = document.getElementById('guestListItems');
                 guestListItems.innerHTML = '';
 
-                // Reverse the order of the array to display newest guests first
-                data.reverse().forEach(guest => {
-                    const listItem = document.createElement('li');
-                    const messageBox = document.createElement('div'); // Create a div for message box
-                    messageBox.classList.add('message-box'); // Add class for styling
+           const lastTenMessages = data.slice(-35);
+
+            // Reverse the order of the array to display newest guests first
+            lastTenMessages.reverse().forEach(guest => {
+                const listItem = document.createElement('li');
+                const messageBox = document.createElement('div'); // Create a div for message box
 
                     // Define replacements for multiple emojis
 						const replacements = {
@@ -192,7 +193,9 @@ document.addEventListener('DOMContentLoaded', function () {
 							':troll:': '<img src="troll.png" style="width: 30px; height: auto; vertical-align: middle;">',
 							':clueless:': '<img src="clueless.png" style="width: 25px; height: auto; vertical-align: middle;">',
 							':steamsalty:': '<img src="steamsalty.png" style="width: 25px; height: auto; vertical-align: middle;">'
-						};		
+							'<:gaming:1221235240362573976>': '<img src="kleiner.gif" style="width: 25px; height: auto; vertical-align: middle;">'
+							':gaming:': '<img src="kleiner.gif" style="width: 25px; height: auto; vertical-align: middle;">'
+						};
 
                     // Replace all occurrences of defined emojis with corresponding images
                     let nameWithImages = guest.name;
