@@ -102,8 +102,11 @@ function isUsernameLocked() {
 function addGuest() {
     const nameInput = document.getElementById('guestName');
     const usernameInput = document.getElementById('guestUsername');
-    const name = nameInput.value;
+    let name = nameInput.value;
     const username = usernameInput.value;
+
+    name = name.replace(/:gaming:/g, '<:gaming:1221235240362573976>');
+	name = name.replace(/@bandit/g, '<@686168917365751833>');
 
     if (!name || !username) {
         alert('Fill in both fields.');
@@ -144,6 +147,7 @@ function addGuest() {
     });
 }
 
+
 document.addEventListener('DOMContentLoaded', function () {
     const usernameInput = document.getElementById('guestUsername');
     if (isUsernameLocked()) {
@@ -171,6 +175,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
  <script>
         let previousMessageCount = 0;
+
     function getGuestList() {
         fetch('https://guest.fiallaspares.com/api/getGuests')
             .then(response => response.json())
@@ -178,12 +183,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 const guestListItems = document.getElementById('guestListItems');
                 guestListItems.innerHTML = '';
 
-           const lastTenMessages = data.slice(-35);
-
-            // Reverse the order of the array to display newest guests first
-            lastTenMessages.reverse().forEach(guest => {
-                const listItem = document.createElement('li');
-                const messageBox = document.createElement('div'); // Create a div for message box
+                // Reverse the order of the array to display newest guests first
+                data.reverse().forEach(guest => {
+                    const listItem = document.createElement('li');
+                    const messageBox = document.createElement('div'); // Create a div for message box
+                    messageBox.classList.add('message-box'); // Add class for styling
 
                     // Define replacements for multiple emojis
 						const replacements = {
@@ -192,9 +196,10 @@ document.addEventListener('DOMContentLoaded', function () {
 							'<:steamsalty:1221228132577579130>': '<img src="steamsalty.png" style="width: 25px; height: auto; vertical-align: middle;">',
 							':troll:': '<img src="troll.png" style="width: 30px; height: auto; vertical-align: middle;">',
 							':clueless:': '<img src="clueless.png" style="width: 25px; height: auto; vertical-align: middle;">',
-							':steamsalty:': '<img src="steamsalty.png" style="width: 25px; height: auto; vertical-align: middle;">'
-							'<:gaming:1221235240362573976>': '<img src="kleiner.gif" style="width: 25px; height: auto; vertical-align: middle;">'
-							':gaming:': '<img src="kleiner.gif" style="width: 25px; height: auto; vertical-align: middle;">'
+							':steamsalty:': '<img src="steamsalty.png" style="width: 25px; height: auto; vertical-align: middle;">',
+							'<:gaming:1221235240362573976>': '<img src="kleiner.gif" style="width: 25px; height: auto; vertical-align: middle;">',
+							':gaming:': '<img src="kleiner.gif" style="width: 25px; height: auto; vertical-align: middle;">',
+							
 						};
 
                     // Replace all occurrences of defined emojis with corresponding images
@@ -239,7 +244,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Fetch new messages every 1 second
         function fetchNewMessages() {
             getGuestList();
-            setTimeout(fetchNewMessages, 1000);
+            setTimeout(fetchNewMessages, 100);
         }
 
         document.addEventListener('DOMContentLoaded', function () {
@@ -266,23 +271,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
     </script>
-<script>
-const backgroundMusic = document.getElementById('backgroundMusic');
-const toggleButton = document.getElementById('toggleButton');
-
-let isMusicPlaying = false;
-
-toggleButton.addEventListener('click', () => {
-  if (!isMusicPlaying) {
-    backgroundMusic.play();
-    toggleButton.textContent = 'Pause Music';
-  } else {
-    backgroundMusic.pause();
-    toggleButton.textContent = 'Play Music';
-  }
-  isMusicPlaying = !isMusicPlaying;
-});
-</script>
     </div>
   </div>
 
