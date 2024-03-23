@@ -182,12 +182,13 @@ document.addEventListener('DOMContentLoaded', function () {
             .then(data => {
                 const guestListItems = document.getElementById('guestListItems');
                 guestListItems.innerHTML = '';
+           const lastTenMessages = data.slice(-35);
 
-                // Reverse the order of the array to display newest guests first
-                data.reverse().forEach(guest => {
-                    const listItem = document.createElement('li');
-                    const messageBox = document.createElement('div'); // Create a div for message box
-                    messageBox.classList.add('message-box'); // Add class for styling
+            // Reverse the order of the array to display newest guests first
+            lastTenMessages.reverse().forEach(guest => {
+                const listItem = document.createElement('li');
+                const messageBox = document.createElement('div'); // Create a div for message box
+                messageBox.classList.add('message-box'); // Add class for styling
 
                     // Define replacements for multiple emojis
 						const replacements = {
