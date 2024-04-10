@@ -113,7 +113,7 @@ function addGuest() {
         return;
     }
 
-    fetch('https://guest.fiallaspares.com/api/addGuest', {
+    fetch('https://chat.fiallaspares.com/api/addGuest', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     <!-- Audio element for ding sound -->
     <audio id="dingSound">
-        <source src="https://banditboogaloo.com/ding.mp3" type="audio/mpeg">
+        <source src="https://banditboogaloo.github.io/tester/ding.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
 
@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let previousMessageCount = 0;
 
     function getGuestList() {
-        fetch('https://guest.fiallaspares.com/api/getGuests')
+        fetch('https://chat.fiallaspares.com/api/getGuests')
             .then(response => response.json())
             .then(data => {
                 const guestListItems = document.getElementById('guestListItems');
