@@ -47,6 +47,7 @@
   <div id="content-overlay">
     <div class="content">
       <h1>Bandit's Website</h1>
+      
       <p style="color: #1793d4;">not enough donuts - asar ★★★★☆</p>
       <p style="color: #1793d4;">donuts filled with piss - memegrand1 ★☆☆☆☆</p>
       <p style="color: #1793d4;">Walgreens is better - newhello2 ★★★☆☆</p>
@@ -55,7 +56,44 @@
       <p style="color: #1793d4;">spongeboob nopants - Tom ★★★★★</p>
       <p style="color: #1793d4;">Monkey eat donut and donut eat monkey - Charlie ★★★★★</p>
       <p style="color: #1793d4;">PEEPEEPOOPOO - Bertie ★★★★★</p>
+<div id="trackInfo"></div>
+<script>
+  async function fetchCurrentlyPlayingTrack() {
+    try {
+      const response = await fetch('http://26.28.64.73:85/playback');
+      const data = await response.json();
 
+      // Update UI with track information
+      const trackInfoElement = document.getElementById('trackInfo');
+      trackInfoElement.innerHTML = `
+        <p>currently listening to <a href="${data.track_link}">${data.name}</p>
+        <img id="lolmage" src="${data.image_url}" width="102" height="102" alt="Album Artwork">
+
+        `;
+    } catch (error) {
+        console.error('Error fetching currently playing track:', error);
+    }
+}
+
+// Function to convert milliseconds to time format (hh:mm:ss)
+function msToTime(duration) {
+    const seconds = Math.floor((duration / 1000) % 60);
+    const minutes = Math.floor((duration / (1000 * 60)) % 60);
+    const hours = Math.floor((duration / (1000 * 60 * 60)) % 24);
+
+    const hoursStr = (hours < 10) ? "0" + hours : hours;
+    const minutesStr = (minutes < 10) ? "0" + minutes : minutes;
+    const secondsStr = (seconds < 10) ? "0" + seconds : seconds;
+
+    return hoursStr + ":" + minutesStr + ":" + secondsStr;
+}
+
+  // Fetch currently playing track on page load
+  fetchCurrentlyPlayingTrack();
+
+  // Refresh track information every 10 seconds
+  setInterval(fetchCurrentlyPlayingTrack, 10000);
+</script>
       <h1>Episodes</h1>
       <a href="https://banditboogaloo.github.io/tester/peanut">1</a><br>
       <a href="https://banditboogaloo.github.io/tester/pickles">2</a><br>
